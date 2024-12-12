@@ -3,18 +3,28 @@ package main
 import (
 	"log"
 	"net"
+	"os"
 	"strings"
 
 	"github.com/sidra-gateway/go-pdk/server"
 )
 
-// Daftar IP yang diizinkan
-var allowedIPs = map[string]bool{
-	"192.168.1.1": true,
-	"192.168.1.2": true,
+var allowedIPs map[string]bool
+
+// Fungsi untuk inisialisasi daftar IP yang diizinkan dari environment variable
+func initAllowedIPs() {
+	allowedIPs = make(map[string]bool) 
+	allowedIPsEnv := os.Getenv("ALLOWED_IPS") 
+	if allowedIPsEnv == "" {
+		// Jika environment variable tidak ada, gunakan daftar IP default
+		allowedIPsEnv = "192.168.1.1,192.168.1.2"
+	}
+	for _, ip := range strings.Split(allowedIPsEnv, ",") {
+		allowedIPs[strings.TrimSpace(ip)] = true // Menambahkan setiap IP ke map
+	}
 }
 
-// Fungsi untuk menangani permintaan dengan memeriksa whitelist IP
+// Fungsi handler untuk memproses permintaan dan memeriksa apakah IP klien diizinkan
 func whitelistHandler(request server.Request) server.Response {
 	clientIP := request.Headers["X-Real-Ip"]
 	if clientIP == "" {
@@ -24,29 +34,24 @@ func whitelistHandler(request server.Request) server.Response {
 		clientIP = request.Headers["Remote-Addr"]
 	}
 
-	ipAllowed := false
-	for ip := range allowedIPs {
-		if strings.TrimSpace(ip) == clientIP {
-			ipAllowed = true
-			break
-		}
-	}
-
+	// Membuat respons berdasarkan apakah IP diizinkan atau tidak
 	var response server.Response
-	if ipAllowed {
-		log.Println("IP allowed:", clientIP)
-		response.StatusCode = 200
-		response.Body = "Allowed"
+	if allowedIPs[clientIP] {
+		// Jika IP ada di daftar allowedIPs
+		log.Println("IP allowed:", clientIP) 
+		response.StatusCode = 200            
+		response.Body = "Allowed"            
 	} else {
-		log.Println("IP not allowed:", clientIP)
-		response.StatusCode = 403
-		response.Body = "IP not allowed"
+		// Jika IP tidak ada di daftar allowedIPs
+		log.Println("IP not allowed:", clientIP) 
+		response.StatusCode = 403                
+		response.Body = "IP not allowed"         
 	}
-	return response
+	return response 
 }
 
 func main() {
-	// Menggunakan server dari go-pdk
+	initAllowedIPs() // Memanggil fungsi untuk inisialisasi daftar IP yang diizinkan
 	srv := server.NewServer("whitelist", whitelistHandler)
 	log.Println("Whitelist plugin using go-pdk server.")
 	srv.Start()
