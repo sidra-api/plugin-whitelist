@@ -1,70 +1,39 @@
 # Plugin Whitelist
 
-## Deskripsi
-Plugin Whitelist digunakan untuk memfilter permintaan berdasarkan alamat IP pada Sidra Api. Plugin ini memastikan hanya IP yang diizinkan dalam daftar whitelist yang dapat mengakses layanan backend.
+## Description  
+The Whitelist Plugin filters incoming requests based on their IP addresses in the Sidra Api. This plugin ensures that only IPs included in the whitelist are allowed to access the backend services.
 
 ---
 
-## Cara Kerja
-1. **Pemeriksaan IP**
-   - Plugin memeriksa IP klien dari header berikut:
-     - `X-Real-Ip`
-     - `X-Forwarded-For`
-     - `Remote-Addr`
-   - Jika IP klien cocok dengan salah satu IP dalam daftar whitelist, akses akan diizinkan.
+## How It Works  
 
-2. **Respon**
-   - Jika IP diizinkan:
-     - Status: `200 OK`
-     - Body: "Allowed"
-   - Jika IP tidak diizinkan:
-     - Status: `403 Forbidden`
-     - Body: "IP not allowed"
+1. **Initializing Allowed IPs**  
+   - The list of allowed IPs is retrieved from the `ALLOWED_IPS` environment variable.  
+   - If the environment variable is not set, the plugin uses the following default list:  
+     ```
+     192.168.1.1,192.168.1.2
+     ```
 
----
+2. **IP Address Validation**  
+   - The plugin checks the client's IP from the following headers:  
+     - `X-Real-Ip`  
+     - `X-Forwarded-For`  
+     - `Remote-Addr`  
+   - If the client's IP matches any of the whitelisted IPs, access is granted.
 
-## Konfigurasi
-- **Daftar Whitelist**
-  - Dapat dikonfigurasi langsung pada file `main.go`:
-    ```go
-    var allowedIPs = map[string]bool{
-        "192.168.1.1": true,
-        "192.168.1.2": true,
-    }
-    ```
+3. **Response**  
+   - If the IP is allowed:  
+     - **Status**: `200 OK`  
+     - **Body**: "Allowed".  
+   - If the IP is not allowed:  
+     - **Status**: `403 Forbidden`  
+     - **Body**: "IP not allowed".
 
 ---
 
-## Cara Menjalankan
-1. Pastikan Anda sudah menginstal **Sidra Api**.
-2. Tambahkan plugin ini ke direktori `plugins/whitelist/main.go` pada Sidra Api.
-3. Kompilasi dan jalankan Sidra Api.
-4. Plugin akan otomatis terhubung melalui UNIX socket pada path `/tmp/whitelist.sock`.
+## Installation
 
----
-
-## Pengujian
-
-### Endpoint
-- **URL**: Endpoint mana saja yang dikonfigurasi untuk melewati plugin Whitelist.
-
-### Langkah Pengujian
-1. Kirim request dari IP yang diizinkan atau tidak diizinkan.
-2. Respons yang diharapkan:
-   - Jika IP diizinkan:
-     - Status: `200 OK`
-     - Body: "Allowed"
-   - Jika IP tidak diizinkan:
-     - Status: `403 Forbidden`
-     - Body: "IP not allowed"
-
----
-
-## Catatan Penting
-- **Keamanan**: Pastikan hanya IP yang sah dimasukkan dalam whitelist.
-- **Header IP**: Pastikan header IP seperti `X-Real-Ip` atau `X-Forwarded-For` dikirim oleh proxy atau load balancer sebelum mencapai Sidra Gateway.
-
----
-
-## Lisensi
-MIT License
+### Clone Repository  
+```bash
+git clone <repository-url>
+cd plugin-whitelist
