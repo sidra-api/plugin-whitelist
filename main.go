@@ -63,7 +63,14 @@ func whitelistHandler(request server.Request) server.Response {
 
 func main() {
 	initAllowedIPs() // Memanggil fungsi untuk inisialisasi daftar IP yang diizinkan
-	srv := server.NewServer("whitelist", whitelistHandler)
-	log.Println("Whitelist plugin using go-pdk server.")
+
+	// Mengambil nama plugin dari environment variable, atau menggunakan default
+	pluginName := os.Getenv("PLUGIN_NAME")
+	if pluginName == "" {
+		pluginName = "whitelist"
+	}
+
+	srv := server.NewServer(pluginName, whitelistHandler)
+	log.Printf("Plugin '%s' using go-pdk server.\n", pluginName)
 	srv.Start()
 }
