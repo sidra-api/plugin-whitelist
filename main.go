@@ -29,7 +29,7 @@ func initAllowedIPs() {
 
 // Fungsi handler untuk memproses permintaan dan memeriksa apakah IP klien diizinkan
 func whitelistHandler(request server.Request) server.Response {
-	clientIP := request.Headers["X-Real-Ip"]
+	clientIP := request.Headers["X-Real-IP"]
 	if clientIP == "" {
 		clientIP, _, _ = net.SplitHostPort(request.Headers["X-Forwarded-For"])
 	}
